@@ -1,7 +1,14 @@
 [package]
 name = "serde-nested-json"
 version = "0.1.0"
+authors = ["Stefan Terdell"]
 edition = "2021"
+license = "ISC"
+description = "Helpers for de/serializing nested JSON strings with Serde"
+repository = "https://github.com/StefanTerdell/serde-nested-json"
+homepage = "https://crates.io/crates/serde-nested-json"
+documentation = "https://docs.rs/serde-nested-json"
+readme = "README.md"
 
 [dependencies]
 serde = { version = "1.0.216", features = ["derive"] }
