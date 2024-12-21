@@ -1,6 +1,6 @@
 [package]
 name = "serde-nested-json"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Stefan Terdell"]
 edition = "2021"
 license = "ISC"
