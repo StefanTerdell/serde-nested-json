@@ -10,24 +10,16 @@ use std::{
     marker::PhantomData,
 };
 
-pub trait DeserializeInnerOwned {
-    type Inner: DeserializeOwned;
-}
+pub struct NestedJsonVisitor<T>(PhantomData<T>);
 
-impl<T: DeserializeOwned> DeserializeInnerOwned for NestedJson<T> {
-    type Inner = T;
-}
-
-pub struct NestedJsonVisitor<T: DeserializeInnerOwned + DeserializeOwned>(PhantomData<T>);
-
-impl<T: DeserializeOwned + DeserializeInnerOwned> NestedJsonVisitor<T> {
+impl<T> NestedJsonVisitor<T> {
     fn new() -> Self {
         Self(PhantomData)
     }
 }
 
-pub fn unnest<'de, D: Deserializer<'de>, T: DeserializeOwned>(d: D) -> Result<T, D::Error> {
-    Ok(NestedJson::deserialize(d)?.0)
+pub fn unnest<'de, D: Deserializer<'de>, T: Deserialize<'de>>(d: D) -> Result<T, D::Error> {
+    d.deserialize_any(NestedJsonVisitor::<T>::new())
 }
 
 pub fn unnest_vec<'de, D: Deserializer<'de>, T: DeserializeOwned>(
@@ -41,9 +33,9 @@ pub fn unnest_vec<'de, D: Deserializer<'de>, T: DeserializeOwned>(
 
 impl<'de, T> Visitor<'de> for NestedJsonVisitor<T>
 where
-    T: DeserializeOwned + DeserializeInnerOwned,
+    T: Deserialize<'de>,
 {
-    type Value = T::Inner;
+    type Value = T;
 
     fn expecting(&self, formatter: &mut Formatter) -> FmtResult {
         formatter.write_str("expected a string")
@@ -63,14 +55,14 @@ where
 
 impl<'de, T> Deserialize<'de> for NestedJson<T>
 where
-    T: DeserializeOwned,
+    T: Deserialize<'de>,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let visitor = NestedJsonVisitor::<NestedJson<T>>::new();
-        let inner = deserializer.deserialize_str(visitor)?;
+        let visitor = NestedJsonVisitor::<T>::new();
+        let inner = deserializer.deserialize_any(visitor)?;
         let nested = Self(inner);
         Ok(nested)
     }

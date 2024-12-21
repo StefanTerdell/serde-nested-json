@@ -5,6 +5,7 @@
 This is a small utility crate to help deal with nested JSON in structs.
 
 Here's a basic example:
+
 ```rust
 use serde::{Serialize, Deserialize};
 use serde_json::{json, from_value, to_string_pretty};
@@ -34,6 +35,34 @@ struct MyStruct {
 # println!("{}", to_string_pretty(&from_value::<MyStruct>(as_json).unwrap()).unwrap());
 ```
 
+## Optional values
+
+Optional values deserialize just fine from `"null"`, but if the value may be undefined please add `default` field attribute:
+
+```rust
+
+use serde::{Serialize, Deserialize};
+use serde_json::{json, from_value, to_string_pretty};
+use serde_nested_json;
+
+let as_json = json!({
+  "here": "\"hello!\"",
+  "null": "null",
+  // "undefined": _
+});
+
+#[derive(Serialize, Deserialize)]
+struct MyStruct {
+  #[serde(with = "serde_nested_json")]
+  here: Option<String>,
+  #[serde(with = "serde_nested_json")]
+  null: Option<String>,
+  #[serde(with = "serde_nested_json", default)] // <-- default saves the day
+  undefined: Option<String>,
+}
+# println!("{}", to_string_pretty(&from_value::<MyStruct>(as_json).unwrap()).unwrap());
+```
+
 ## Vecs
 
 There's also a helper module for vecs containing nested items.
@@ -47,7 +76,7 @@ use serde_nested_json;
 let as_json = json!({
   "array": [
     "{\"foo\":\"bar\",\"baz\":123}",
-    "{\"foo\":\"baz\",\"baz\":54321}" 
+    "{\"foo\":\"baz\",\"baz\":54321}"
   ]
 });
 
@@ -71,7 +100,7 @@ The main helper type of this crate is `NestedJson<T>` which
 can be used without field annotation. You will however need
 to extract and insert the inner value on your own:
 
-```rust  
+```rust
 use serde::{Serialize, Deserialize};
 use serde_json::{json, from_value, to_string_pretty};
 use serde_nested_json::NestedJson;
