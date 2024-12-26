@@ -164,14 +164,25 @@ let d = NestedJson::<SomeData>::from(c);
 
 ### Forwarded trait implementations
 
-`NestedJson<T>` implements `Debug` and `Clone` for any type
-`T` that also implements them, but does not require either.
+`NestedJson<T>` implements the following traits for any type
+`T` that also implements them, but does not require any of them:
+1. Debug
+1. Clone
+1. PartialEq (and Eq)
+1. PartialOrd
+1. Ord
+
+These should be enough at least for basic tests etc., but
+just open an issue if you need anything else.
 
 ```rust
 # use serde_nested_json::NestedJson;
 let stuff = NestedJson::from(vec!["hello"]);
-let clone = stuff.clone();
+let mut clone = stuff.clone();
 
+assert_eq!(stuff, clone);
 println!("{:?}", clone); // 'NestedJson(["hello"])'
+
+clone.into().sort();
 ```
 

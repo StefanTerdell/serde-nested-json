@@ -121,6 +121,26 @@ impl<T: std::fmt::Debug> std::fmt::Debug for NestedJson<T> {
     }
 }
 
+impl<T: PartialEq> PartialEq for NestedJson<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<T: Eq> Eq for NestedJson<T> {}
+
+impl<T: PartialOrd> PartialOrd for NestedJson<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.0.partial_cmp(&other.0)
+    }
+}
+
+impl<T: Ord> Ord for NestedJson<T> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.0.cmp(&other.0)
+    }
+}
+
 pub mod vec {
     pub use super::de::unnest_vec as deserialize;
     pub use super::ser::nest_iter as serialize;
