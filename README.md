@@ -161,3 +161,17 @@ let d = NestedJson::<SomeData>::from(c);
 // let e = SomeData::from(d);
 # println!("{}", to_string_pretty(&from_value::<MyStruct>(as_json).unwrap()).unwrap());
 ```
+
+### Forwarded trait implementations
+
+`NestedJson<T>` implements `Debug` and `Clone` for any type
+`T` that also implements them, but does not require either.
+
+```rust
+# use serde_nested_json::NestedJson;
+let stuff = NestedJson::from(vec!["hello"]);
+let clone = stuff.clone();
+
+println!("{:?}", clone); // 'NestedJson(["hello"])'
+```
+

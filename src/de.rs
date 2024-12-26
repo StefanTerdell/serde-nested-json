@@ -12,14 +12,8 @@ use std::{
 
 pub struct NestedJsonVisitor<T>(PhantomData<T>);
 
-impl<T> NestedJsonVisitor<T> {
-    fn new() -> Self {
-        Self(PhantomData)
-    }
-}
-
 pub fn unnest<'de, D: Deserializer<'de>, T: Deserialize<'de>>(d: D) -> Result<T, D::Error> {
-    d.deserialize_any(NestedJsonVisitor::<T>::new())
+    d.deserialize_any(NestedJsonVisitor(PhantomData))
 }
 
 pub fn unnest_vec<'de, D: Deserializer<'de>, T: DeserializeOwned>(
@@ -61,7 +55,7 @@ where
     where
         D: Deserializer<'de>,
     {
-        let visitor = NestedJsonVisitor::<T>::new();
+        let visitor = NestedJsonVisitor(PhantomData);
         let inner = deserializer.deserialize_any(visitor)?;
         let nested = Self(inner);
         Ok(nested)

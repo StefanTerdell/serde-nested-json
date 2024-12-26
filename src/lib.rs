@@ -109,6 +109,18 @@ impl<T> From<T> for NestedJson<T> {
     }
 }
 
+impl<T: Clone> Clone for NestedJson<T> {
+    fn clone(&self) -> Self {
+        NestedJson(self.0.clone())
+    }
+}
+
+impl<T: std::fmt::Debug> std::fmt::Debug for NestedJson<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("NestedJson").field(&self.0).finish()
+    }
+}
+
 pub mod vec {
     pub use super::de::unnest_vec as deserialize;
     pub use super::ser::nest_iter as serialize;
