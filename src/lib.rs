@@ -141,6 +141,47 @@ impl<T: Ord> Ord for NestedJson<T> {
     }
 }
 
+#[cfg(feature = "schemars08")]
+impl<T: schemars08::JsonSchema> schemars08::JsonSchema for NestedJson<T> {
+    fn schema_name() -> String {
+        format!("{}Json", T::schema_name())
+    }
+
+    fn json_schema(
+        generator: &mut schemars08::r#gen::SchemaGenerator,
+    ) -> schemars08::schema::Schema {
+        schemars08::schema::Schema::Object(schemars08::schema::SchemaObject {
+            instance_type: Some(schemars08::schema::InstanceType::String.into()),
+            extensions: std::collections::BTreeMap::from([
+                (
+                    "contentMediaType".to_string(),
+                    serde_json::json!("application/json"),
+                ),
+                (
+                    "contentSchema".to_string(),
+                    serde_json::json!(generator.subschema_for::<T>()),
+                ),
+            ]),
+            ..Default::default()
+        })
+    }
+}
+
+#[cfg(feature = "schemars1")]
+impl<T: schemars1::JsonSchema> schemars1::JsonSchema for NestedJson<T> {
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        format!("{}Json", T::schema_name()).into()
+    }
+
+    fn json_schema(generator: &mut schemars1::SchemaGenerator) -> schemars1::Schema {
+        schemars1::json_schema!({
+            "type": "string",
+            "contentMediaType": "application/json",
+            "contentSchema": generator.subschema_for::<T>()
+        })
+    }
+}
+
 pub mod vec {
     pub use super::de::unnest_vec as deserialize;
     pub use super::ser::nest_iter as serialize;

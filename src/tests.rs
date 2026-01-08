@@ -1,4 +1,5 @@
 use crate as serde_nested_json;
+use pretty_assertions::assert_eq;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -106,4 +107,113 @@ fn it_should_work() {
         serde_json::from_str::<Value>(&ser_nested).unwrap(),
         serde_json::from_str::<Value>(nested_json).unwrap(),
     );
+}
+
+#[test]
+#[cfg(feature = "schemars1")]
+fn test_schemars1() {
+    use schemars1::{self as schemars, schema_for, JsonSchema};
+    use serde_json::json;
+
+    use crate::NestedJson;
+
+    #[derive(Debug, Serialize, Deserialize, JsonSchema)]
+    struct InnerStruct {
+        my_value: u8,
+    }
+
+    #[derive(Debug, Serialize, Deserialize, JsonSchema)]
+    struct OuterStruct {
+        inner_struct: NestedJson<InnerStruct>,
+    }
+
+    assert_eq!(
+        json!(schema_for!(OuterStruct)),
+        json!({
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "title": "OuterStruct",
+            "type": "object",
+            "required": ["inner_struct"],
+            "properties": {
+                "inner_struct": {
+                    "$ref": "#/$defs/InnerStructJson"
+                }
+            },
+            "$defs": {
+                "InnerStructJson": {
+                    "type": "string",
+                    "contentMediaType": "application/json",
+                    "contentSchema": {
+                        "$ref": "#/$defs/InnerStruct"
+                    }
+                },
+                "InnerStruct": {
+                    "type": "object",
+                    "required": ["my_value"],
+                    "properties": {
+                        "my_value": {
+                            "type": "integer",
+                            "format": "uint8",
+                            "minimum": 0,
+                            "maximum": 255
+                        }
+                    }
+                }
+            }
+        })
+    )
+}
+
+#[test]
+#[cfg(feature = "schemars08")]
+fn test_schemars08() {
+    use schemars08::{self as schemars, schema_for, JsonSchema};
+    use serde_json::json;
+
+    use crate::NestedJson;
+
+    #[derive(Debug, Serialize, Deserialize, JsonSchema)]
+    struct InnerStruct {
+        my_value: u8,
+    }
+
+    #[derive(Debug, Serialize, Deserialize, JsonSchema)]
+    struct OuterStruct {
+        inner_struct: NestedJson<InnerStruct>,
+    }
+
+    assert_eq!(
+        json!(schema_for!(OuterStruct)),
+        json!({
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "title": "OuterStruct",
+            "type": "object",
+            "required": ["inner_struct"],
+            "properties": {
+                "inner_struct": {
+                    "$ref": "#/definitions/InnerStructJson"
+                }
+            },
+            "definitions": {
+                "InnerStructJson": {
+                    "type": "string",
+                    "contentMediaType": "application/json",
+                    "contentSchema": {
+                        "$ref": "#/definitions/InnerStruct"
+                    }
+                },
+                "InnerStruct": {
+                    "type": "object",
+                    "required": ["my_value"],
+                    "properties": {
+                        "my_value": {
+                            "type": "integer",
+                            "format": "uint8",
+                            "minimum": 0.0,
+                        }
+                    }
+                }
+            }
+        })
+    )
 }

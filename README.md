@@ -166,11 +166,12 @@ let d = NestedJson::<SomeData>::from(c);
 
 `NestedJson<T>` implements the following traits for any type
 `T` that also implements them, but does not require any of them:
-1. Debug
-1. Clone
-1. PartialEq (and Eq)
-1. PartialOrd
-1. Ord
+1. `Debug`
+1. `Clone`
+1. `PartialEq` (and `Eq`)
+1. `PartialOrd`
+1. `Ord`
+1. `schemars::JsonSchema` (if the `schemars08` and/or `schemars1` features are enabled)
 
 These should be enough at least for basic tests etc., but
 just open an issue if you need anything else.
