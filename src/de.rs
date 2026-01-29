@@ -21,7 +21,15 @@ pub fn unnest_vec<'de, D: Deserializer<'de>, T: DeserializeOwned>(
 ) -> Result<Vec<T>, D::Error> {
     Vec::<String>::deserialize(d)?
         .into_iter()
-        .map(|s| serde_json::from_str(&s).map_err(serde::de::Error::custom))
+        .enumerate()
+        .map(|(idx, s)| {
+            serde_json::from_str(&s).map_err(|e| {
+                serde::de::Error::custom(format!(
+                    "error parsing nested JSON string at index {}: {} (note: line/column are relative to the nested string, not the outer document)",
+                    idx, e
+                ))
+            })
+        })
         .collect::<Result<Vec<_>, _>>()
 }
 
@@ -32,7 +40,7 @@ where
     type Value = T;
 
     fn expecting(&self, formatter: &mut Formatter) -> FmtResult {
-        formatter.write_str("expected a string")
+        formatter.write_str("a string or null")
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
@@ -41,9 +49,31 @@ where
     {
         let reader = VecDeque::from(v.to_string().into_bytes());
         let inner = Self::Value::deserialize(&mut serde_json::Deserializer::from_reader(reader))
-            .map_err(E::custom)?;
+            .map_err(|e| {
+                E::custom(format!(
+                    "error parsing nested JSON string: {} (note: line/column are relative to the nested string, not the outer document)",
+                    e
+                ))
+            })?;
 
         Ok(inner)
+    }
+
+    fn visit_unit<E>(self) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        // `null` maps naturally to T::deserialize(()).
+        // This works when T is `Option<_>` (becomes None).
+        T::deserialize(serde::de::value::UnitDeserializer::new())
+    }
+
+    fn visit_none<E>(self) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        // same as visit unit
+        T::deserialize(serde::de::value::UnitDeserializer::new())
     }
 }
 
